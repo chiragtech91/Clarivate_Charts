@@ -1,0 +1,44 @@
+{
+  "dashboard": {
+    "period": "Jan - Jun 2026",
+    "totalUnits": 4420,
+    "growthRate": 18.2
+  },
+  "monthlyUsage": [
+    { "month": "Jan", "prescriptions": 480, "patients": 390, "inpatientVisits": 210 },
+    { "month": "Feb", "prescriptions": 520, "patients": 430, "inpatientVisits": 235 },
+    { "month": "Mar", "prescriptions": 610, "patients": 500, "inpatientVisits": 270 },
+    { "month": "Apr", "prescriptions": 570, "patients": 470, "inpatientVisits": 248 },
+    { "month": "May", "prescriptions": 690, "patients": 580, "inpatientVisits": 305 },
+    { "month": "Jun", "prescriptions": 760, "patients": 640, "inpatientVisits": 330 }
+  ],
+  "medicineStock": [
+    { "name": "Amoxicillin", "availableUnits": 38, "reservedUnits": 12, "reorderLevel": 20, "status": "Healthy" },
+    { "name": "Metformin", "availableUnits": 26, "reservedUnits": 8, "reorderLevel": 18, "status": "Watch" },
+    { "name": "Ibuprofen", "availableUnits": 19, "reservedUnits": 6, "reorderLevel": 15, "status": "Healthy" },
+    { "name": "Lisinopril", "availableUnits": 17, "reservedUnits": 5, "reorderLevel": 14, "status": "Low" }
+  ],
+  "weeklyDemand": [
+    { "day": "Mon", "units": 145, "target": 150 },
+    { "day": "Tue", "units": 210, "target": 200 },
+    { "day": "Wed", "units": 185, "target": 190 },
+    { "day": "Thu", "units": 265, "target": 240 },
+    { "day": "Fri", "units": 230, "target": 225 },
+    { "day": "Sat", "units": 310, "target": 280 },
+    { "day": "Sun", "units": 275, "target": 260 }
+  ],
+  "categoryRevenue": [
+    { "name": "Antibiotics", "revenue": 34, "target": 31, "region": "North" },
+    { "name": "Diabetes", "revenue": 26, "target": 25, "region": "West" },
+    { "name": "Cardiovascular", "revenue": 20, "target": 22, "region": "Central" },
+    { "name": "Pain Relief", "revenue": 12, "target": 15, "region": "South" },
+    { "name": "Other", "revenue": 8, "target": 7, "region": "East" }
+  ],
+  "regionalPerformance": [
+    { "region": "North", "units": 1260, "growth": 22.4, "margin": 74 },
+    { "region": "West", "units": 1050, "growth": 16.8, "margin": 68 },
+    { "region": "Central", "units": 895, "growth": 12.1, "margin": 61 },
+    { "region": "South", "units": 740, "growth": 9.6, "margin": 57 },
+    { "region": "East", "units": 475, "growth": 7.4, "margin": 53 }
+  ]
+}

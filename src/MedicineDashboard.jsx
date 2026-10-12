@@ -1,0 +1,360 @@
+import { useEffect, useRef, useState } from 'react'
+import Highcharts from 'highcharts'
+import HighchartsReactModule from 'highcharts-react-official'
+import medicineData from './data/medicineData.json'
+
+const HighchartsReact = HighchartsReactModule.HighchartsReact
+
+const chartStyle = {
+  fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+  fontSize: '13px',
+}
+
+const lineChartOptions = {
+  chart: { type: 'line', styledMode: false, height: 420, marginTop: 35 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  xAxis: { categories: medicineData.monthlyUsage.map((item) => item.month), lineWidth: 0, gridLine: { visible: false } },
+  yAxis: { min: 0, title: { text: 'Monthly activity', style: { color: '#64748b', fontSize: '12px' } }, gridLine: { lineWidth: 1, stroke: '#e2e8f0' } },
+  series: [
+    { name: 'Prescriptions', data: medicineData.monthlyUsage.map((item) => item.prescriptions), color: '#2563eb', lineWidth: 3, marker: { enabled: true, radius: 5 } },
+    { name: 'Patients', data: medicineData.monthlyUsage.map((item) => item.patients), color: '#8b5cf6', lineWidth: 3, marker: { enabled: true, radius: 5 } },
+    { name: 'Inpatient visits', data: medicineData.monthlyUsage.map((item) => item.inpatientVisits), color: '#f59e0b', lineWidth: 3, marker: { enabled: true, radius: 5 } },
+  ],
+  tooltip: { shared: true, valueFormat: '{point.y}' },
+  plotOptions: { line: { animation: { duration: 900 } } },
+  style: chartStyle,
+}
+
+const pieChartOptions = {
+  chart: { type: 'pie', styledMode: false, height: 340, margin: [8, 8, 8, 8], spacing: 0 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  plotOptions: {
+    pie: {
+      size: 210,
+      center: ['50%', '50%'],
+      dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.y} units' },
+    },
+  },
+  series: [{ type: 'pie', name: 'Available stock', data: medicineData.medicineStock.map((item) => ({ name: item.name, y: item.availableUnits })) }],
+  tooltip: { point: { format: '<b>{point.name}</b>: {point.y} units' } },
+  style: chartStyle,
+}
+
+const donutChartOptions = {
+  chart: { type: 'pie', styledMode: false, height: 340, margin: [8, 8, 8, 8], spacing: 0 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  plotOptions: {
+    pie: {
+      size: 190,
+      innerSize: 92,
+      startAngle: 90,
+      endAngle: 450,
+      center: ['50%', '50%'],
+      dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.y} units' },
+    },
+  },
+  series: [{ type: 'pie', name: 'Stock mix', data: medicineData.medicineStock.map((item) => ({ name: item.name, y: item.availableUnits })) }],
+  colors: ['#2563eb', '#7c3aed', '#10b981', '#f59e0b'],
+  tooltip: { point: { format: '<b>{point.name}</b>: {point.y} units' } },
+  style: chartStyle,
+}
+
+const columnChartOptions = {
+  chart: { type: 'column', styledMode: false, height: 420, marginTop: 35 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  xAxis: { categories: medicineData.weeklyDemand.map((item) => item.day), lineWidth: 0, gridLine: { visible: false } },
+  yAxis: { min: 0, title: { text: 'Units sold', style: { color: '#64748b', fontSize: '12px' } }, gridLine: { lineWidth: 1, stroke: '#e2e8f0' } },
+  series: [
+    { name: 'Actual units', data: medicineData.weeklyDemand.map((item) => item.units), color: '#0ea5e9', borderRadius: 7 },
+    { name: 'Target units', data: medicineData.weeklyDemand.map((item) => item.target), color: '#94a3b8', borderRadius: 7 },
+  ],
+  tooltip: { shared: true, valuePrefix: 'Units: ' },
+  style: chartStyle,
+}
+
+const areaChartOptions = {
+  chart: { type: 'areaspline', styledMode: false, height: 420, marginTop: 35 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  xAxis: { categories: medicineData.categoryRevenue.map((item) => item.name), lineWidth: 0, gridLine: { visible: false } },
+  yAxis: { min: 0, title: { text: 'Revenue (%)', style: { color: '#64748b', fontSize: '12px' } }, gridLine: { lineWidth: 1, stroke: '#e2e8f0' } },
+  series: [
+    { name: 'Actual revenue', data: medicineData.categoryRevenue.map((item) => item.revenue), color: '#10b981', fillOpacity: 0.22, fillColor: '#10b981', lineWidth: 2 },
+    { name: 'Target revenue', data: medicineData.categoryRevenue.map((item) => item.target), color: '#f59e0b', lineWidth: 2 },
+  ],
+  tooltip: { shared: true, valueSuffix: '%' },
+  style: chartStyle,
+}
+
+const barChartOptions = {
+  chart: { type: 'bar', styledMode: false, height: 420, marginTop: 35 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  xAxis: {
+    categories: medicineData.medicineStock.map((item) => item.name),
+    title: { text: 'Medicine', style: { color: '#64748b', fontSize: '12px' } },
+    lineWidth: 0,
+    gridLine: { visible: false },
+  },
+  yAxis: {
+    min: 0,
+    title: { text: 'Units', style: { color: '#64748b', fontSize: '12px' } },
+    gridLine: { lineWidth: 1, stroke: '#e2e8f0' },
+  },
+  series: [
+    { name: 'Available', data: medicineData.medicineStock.map((item) => item.availableUnits), color: '#2563eb' },
+    { name: 'Reserved', data: medicineData.medicineStock.map((item) => item.reservedUnits), color: '#94a3b8' },
+  ],
+  tooltip: { shared: true, valuePrefix: 'Units: ' },
+  style: chartStyle,
+}
+
+const scatterChartOptions = {
+  chart: { type: 'scatter', styledMode: false, height: 420, marginTop: 35 },
+  title: { text: null },
+  credits: { enabled: false },
+  exporting: { enabled: false },
+  xAxis: {
+    title: { text: 'Units sold', style: { color: '#64748b', fontSize: '12px' } },
+    min: 0,
+    gridLine: { lineWidth: 1, stroke: '#e2e8f0' },
+  },
+  yAxis: {
+    title: { text: 'Growth (%)', style: { color: '#64748b', fontSize: '12px' } },
+    min: 0,
+    gridLine: { lineWidth: 1, stroke: '#e2e8f0' },
+  },
+  series: [{
+    name: 'Regional performance',
+    data: medicineData.regionalPerformance.map((item) => ({
+      name: item.region,
+      x: item.units,
+      y: item.growth,
+    })),
+    color: '#8b5cf6',
+    marker: { enabled: true, radius: 8, fillOpacity: 0.8 },
+    dataLabels: {
+      enabled: true,
+      format: '<b>{point.name}</b>',
+      verticalPosition: 'bottom',
+    },
+  }],
+  tooltip: {
+    point: {
+      format: '<b>{point.name}</b><br/>Units: {point.x}<br/>Growth: {point.y}%',
+    },
+  },
+  style: chartStyle,
+}
+
+const ChartCard = ({ title, subtitle, badge, children, className = '' }) => (
+  <section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none ${className}`}>
+    <div className="mb-4 flex items-start justify-between gap-4">
+      <div><h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</h2><p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p></div>
+      {badge && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">{badge}</span>}
+    </div>
+    {children}
+  </section>
+)
+
+const chartTheme = {
+  light: {
+    backgroundColor: '#ffffff',
+    plotBackgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    textColor: '#0f172a',
+    axisColor: '#64748b',
+    gridColor: '#e2e8f0',
+  },
+  dark: {
+    backgroundColor: '#1e293b',
+    plotBackgroundColor: '#1e293b',
+    borderColor: '#475569',
+    textColor: '#e2e8f0',
+    axisColor: '#94a3b8',
+    gridColor: '#334155',
+  },
+}
+
+const getChartOptions = (options, theme) => {
+  const palette = chartTheme[theme] || chartTheme.light
+  const xAxis = options.xAxis ? {
+    ...options.xAxis,
+    labels: { ...options.xAxis.labels, style: { color: palette.axisColor } },
+    title: options.xAxis.title
+      ? { ...options.xAxis.title, style: { ...options.xAxis.title.style, color: palette.textColor } }
+      : options.xAxis.title,
+  } : undefined
+
+  const yAxis = options.yAxis ? {
+    ...options.yAxis,
+    labels: { ...options.yAxis.labels, style: { color: palette.axisColor } },
+    title: options.yAxis.title
+      ? { ...options.yAxis.title, style: { ...options.yAxis.title.style, color: palette.textColor } }
+      : options.yAxis.title,
+    gridLine: { ...options.yAxis.gridLine, stroke: palette.gridColor },
+  } : undefined
+
+  const plotOptions = options.plotOptions
+    ? {
+        ...options.plotOptions,
+        pie: options.plotOptions.pie
+          ? {
+              ...options.plotOptions.pie,
+              dataLabels: {
+                ...options.plotOptions.pie.dataLabels,
+                style: { color: palette.textColor },
+              },
+            }
+          : options.plotOptions.pie,
+      }
+    : options.plotOptions
+
+  return {
+    ...options,
+    chart: {
+      ...options.chart,
+      backgroundColor: palette.backgroundColor,
+      plotBackgroundColor: palette.plotBackgroundColor,
+      borderColor: palette.borderColor,
+    },
+    ...(xAxis ? { xAxis } : {}),
+    ...(yAxis ? { yAxis } : {}),
+    ...(plotOptions ? { plotOptions } : {}),
+    tooltip: {
+      ...options.tooltip,
+      backgroundColor: palette.backgroundColor,
+      borderColor: palette.borderColor,
+      style: { color: palette.textColor },
+    },
+  }
+}
+
+function MedicineDashboard() {
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('medicine-theme')
+    return savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  })
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('medicine-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 transition-colors dark:bg-slate-800 dark:text-slate-100">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 px-5 py-4 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 sm:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img src="/favicon.png" alt="Medicine analytics logo" className="h-10 w-10 rounded-xl object-contain" />
+            <div><p className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">Clarivate</p><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-500">Medicine analytics</p></div>
+          </div>
+          <div ref={userMenuRef} className="relative flex items-center gap-2">
+            <button type="button" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400">
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
+            <button type="button" aria-haspopup="menu" aria-expanded={userMenuOpen} onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[9px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">AM</span>
+              Alex Morgan
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 transition-transform" style={{ transform: userMenuOpen ? 'rotate(180deg)' : undefined }}>
+                <path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            {userMenuOpen && (
+              <div role="menu" className="absolute right-0 top-12 z-20 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-800"><p className="text-xs font-bold text-slate-900 dark:text-slate-100">Alex Morgan</p><p className="mt-0.5 text-[10px] text-slate-400">alex@clarivate.com</p></div>
+                <button type="button" role="menuitem" className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">👤 Profile</button>
+                <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">⚙️ Settings</button>
+                <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">🔔 Notifications</button>
+                <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10">↪ Sign out</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-5 pt-24 pb-7 sm:px-8">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-500">Overview</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Medicine dashboard</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">A simple view of dummy drug usage and inventory data.</p></div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ChartCard title="Prescription trend" subtitle="Monthly prescriptions and patients" badge="Line chart" className="min-h-[480px]">
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(lineChartOptions, theme)} /></div>
+          </ChartCard>
+
+          <ChartCard title="Medicine stock" subtitle="Current inventory by medicine" badge="Pie chart" className="min-h-[500px]">
+            <div className="flex h-[480px] flex-col items-center gap-3">
+              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(pieChartOptions, theme)} /></div>
+              <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4">
+                {medicineData.medicineStock.map((item) => (
+                  <div key={item.name} className="min-w-0 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/70">
+                    <p className="truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{item.name}</p>
+                    <p className="mt-1 text-[11px] font-bold text-slate-800 dark:text-slate-200">{item.availableUnits} available</p>
+                    <p className="mt-0.5 text-[9px] text-slate-400">{item.reservedUnits} reserved · {item.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ChartCard>
+
+          <ChartCard title="Weekly medicine demand" subtitle="Units sold every weekday" badge="Column chart" className="min-h-[480px]">
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(columnChartOptions, theme)} /></div>
+          </ChartCard>
+
+          <ChartCard title="Medicine stock mix" subtitle="Share of available medicine stock" badge="Donut chart" className="min-h-[500px]">
+            <div className="flex h-[480px] flex-col items-center gap-3">
+              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(donutChartOptions, theme)} /></div>
+              <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4">
+                {medicineData.medicineStock.map((item) => (
+                  <div key={item.name} className="min-w-0 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/70">
+                    <p className="truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{item.name}</p>
+                    <p className="mt-1 text-[11px] font-bold text-slate-800 dark:text-slate-200">{item.availableUnits} available</p>
+                    <p className="mt-0.5 text-[9px] text-slate-400">{item.reservedUnits} reserved · {item.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ChartCard>
+
+          <ChartCard title="Revenue by category" subtitle="Percentage share of medicine revenue" badge="Area chart" className="min-h-[480px] lg:col-span-2">
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(areaChartOptions, theme)} /></div>
+          </ChartCard>
+
+          <ChartCard title="Medicine stock comparison" subtitle="Available and reserved units by medicine" badge="Bar chart" className="min-h-[480px]">
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(barChartOptions, theme)} /></div>
+          </ChartCard>
+
+          <ChartCard title="Regional performance" subtitle="Units sold versus growth rate" badge="Scatter chart" className="min-h-[480px]">
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(scatterChartOptions, theme)} /></div>
+          </ChartCard>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default MedicineDashboard

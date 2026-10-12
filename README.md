@@ -13,6 +13,8 @@ In the Auth0 application settings, add the app origin to **Allowed Callback URLs
 
 Restart Vite after changing environment variables. The client ID is public; never put an Auth0 client secret in a `VITE_` variable.
 
+Signing in opens Auth0-hosted login in a popup while keeping the dashboard open.
+
 ## Development
 
 ```sh

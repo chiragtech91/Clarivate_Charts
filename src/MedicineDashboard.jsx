@@ -220,6 +220,15 @@ const getChartOptions = (options, theme) => {
           : options.plotOptions.pie,
       }
     : options.plotOptions
+  const series = options.series?.map((item) => item.dataLabels
+    ? {
+        ...item,
+        dataLabels: {
+          ...item.dataLabels,
+          style: { ...item.dataLabels.style, color: palette.textColor },
+        },
+      }
+    : item)
 
   return {
     ...options,
@@ -232,6 +241,13 @@ const getChartOptions = (options, theme) => {
     ...(xAxis ? { xAxis } : {}),
     ...(yAxis ? { yAxis } : {}),
     ...(plotOptions ? { plotOptions } : {}),
+    ...(series ? { series } : {}),
+    legend: {
+      ...options.legend,
+      itemStyle: { ...options.legend?.itemStyle, color: palette.textColor },
+      itemHoverStyle: { ...options.legend?.itemHoverStyle, color: palette.textColor },
+      itemHiddenStyle: { ...options.legend?.itemHiddenStyle, color: palette.axisColor },
+    },
     tooltip: {
       ...options.tooltip,
       backgroundColor: palette.backgroundColor,

@@ -17,8 +17,18 @@ Signing in opens Auth0-hosted login in a popup while keeping the dashboard open.
 
 ## Development
 
+Start the FastAPI backend in one terminal:
+
+```sh
+python -m pip install -r backend/requirements.txt
+python -m uvicorn backend.main:app --reload
+```
+
+Then start the Vite frontend in another terminal:
+
 ```sh
 npm install
 npm run dev
 ```
 
+Vite proxies `/api` requests to the backend at `http://127.0.0.1:8000`. The dashboard fetches its data from `/api/medicine-data`; the API reads `src/data/medicineData.json`. FastAPI's interactive API documentation is available at `http://127.0.0.1:8000/docs`.

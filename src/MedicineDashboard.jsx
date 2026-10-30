@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import Highcharts from 'highcharts'
 import HighchartsReactModule from 'highcharts-react-official'
-import medicineData from './data/medicineData.json'
 
 const HighchartsReact = HighchartsReactModule.HighchartsReact
 
@@ -11,6 +10,7 @@ const chartStyle = {
   fontSize: '13px',
 }
 
+const getDashboardChartOptions = (medicineData) => {
 const lineChartOptions = {
   chart: { type: 'line', styledMode: false, height: 420, marginTop: 35 },
   title: { text: null },
@@ -158,6 +158,17 @@ const scatterChartOptions = {
   style: chartStyle,
 }
 
+  return {
+    lineChartOptions,
+    pieChartOptions,
+    donutChartOptions,
+    columnChartOptions,
+    areaChartOptions,
+    barChartOptions,
+    scatterChartOptions,
+  }
+}
+
 const ChartCard = ({ title, subtitle, badge, children, className = '' }) => (
   <section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none ${className}`}>
     <div className="mb-4 flex items-start justify-between gap-4">
@@ -259,6 +270,10 @@ const getChartOptions = (options, theme) => {
 
 function MedicineDashboard() {
   const { user, isAuthenticated, isLoading, loginWithPopup, logout } = useAuth0()
+  const [medicineData, setMedicineData] = useState(null)
+  const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState('')
+  const [dataLoadAttempt, setDataLoadAttempt] = useState(0)
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('medicine-theme')
     return savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
@@ -269,6 +284,30 @@ function MedicineDashboard() {
   const [loginError, setLoginError] = useState('')
   const userMenuRef = useRef(null)
   const displayName = user?.name || user?.email || 'Account'
+  const chartOptions = medicineData ? getDashboardChartOptions(medicineData) : null
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch('/api/medicine-data', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Medicine data request failed (${response.status}).`)
+        }
+        return response.json()
+      })
+      .then((data) => setMedicineData(data))
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setDataError(error instanceof Error ? error.message : 'Unable to load medicine data.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDataLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [dataLoadAttempt])
 
   const startAuth0Login = async () => {
     setLoginError('')
@@ -377,18 +416,37 @@ function MedicineDashboard() {
       )}
 
       <main className="mx-auto max-w-7xl px-5 pt-24 pb-7 sm:px-8">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-500">Overview</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Medicine dashboard</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">A simple view of dummy drug usage and inventory data.</p></div>
-        </div>
+        {dataLoading && !medicineData ? (
+          <p role="status" className="py-16 text-center text-sm text-slate-500 dark:text-slate-400">Loading medicine dashboard…</p>
+        ) : dataError && !medicineData ? (
+          <section className="mx-auto max-w-lg border-l-4 border-rose-500 bg-white p-6 shadow-sm dark:bg-slate-900">
+            <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">{dataError}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setDataError('')
+                setDataLoading(true)
+                setDataLoadAttempt((attempt) => attempt + 1)
+              }}
+              className="mt-4 rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800"
+            >
+              Retry
+            </button>
+          </section>
+        ) : medicineData && chartOptions ? (
+          <>
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-500">Overview</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Medicine dashboard</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">A simple view of dummy drug usage and inventory data.</p></div>
+            </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
           <ChartCard title="Prescription trend" subtitle="Monthly prescriptions and patients" badge="Line chart" className="min-h-[480px]">
-            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(lineChartOptions, theme)} /></div>
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.lineChartOptions, theme)} /></div>
           </ChartCard>
 
           <ChartCard title="Medicine stock" subtitle="Current inventory by medicine" badge="Pie chart" className="min-h-[500px]">
             <div className="flex h-[480px] flex-col items-center gap-3">
-              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(pieChartOptions, theme)} /></div>
+              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.pieChartOptions, theme)} /></div>
               <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4">
                 {medicineData.medicineStock.map((item) => (
                   <div key={item.name} className="min-w-0 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/70">
@@ -402,12 +460,12 @@ function MedicineDashboard() {
           </ChartCard>
 
           <ChartCard title="Weekly medicine demand" subtitle="Units sold every weekday" badge="Column chart" className="min-h-[480px]">
-            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(columnChartOptions, theme)} /></div>
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.columnChartOptions, theme)} /></div>
           </ChartCard>
 
           <ChartCard title="Medicine stock mix" subtitle="Share of available medicine stock" badge="Donut chart" className="min-h-[500px]">
             <div className="flex h-[480px] flex-col items-center gap-3">
-              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(donutChartOptions, theme)} /></div>
+              <div className="h-[340px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.donutChartOptions, theme)} /></div>
               <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4">
                 {medicineData.medicineStock.map((item) => (
                   <div key={item.name} className="min-w-0 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/70">
@@ -421,17 +479,19 @@ function MedicineDashboard() {
           </ChartCard>
 
           <ChartCard title="Revenue by category" subtitle="Percentage share of medicine revenue" badge="Area chart" className="min-h-[480px] lg:col-span-2">
-            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(areaChartOptions, theme)} /></div>
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.areaChartOptions, theme)} /></div>
           </ChartCard>
 
           <ChartCard title="Medicine stock comparison" subtitle="Available and reserved units by medicine" badge="Bar chart" className="min-h-[480px]">
-            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(barChartOptions, theme)} /></div>
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.barChartOptions, theme)} /></div>
           </ChartCard>
 
           <ChartCard title="Regional performance" subtitle="Units sold versus growth rate" badge="Scatter chart" className="min-h-[480px]">
-            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(scatterChartOptions, theme)} /></div>
+            <div className="h-[420px] w-full"><HighchartsReact allowChartUpdate highcharts={Highcharts} options={getChartOptions(chartOptions.scatterChartOptions, theme)} /></div>
           </ChartCard>
-        </div>
+            </div>
+          </>
+        ) : null}
       </main>
     </div>
   )
